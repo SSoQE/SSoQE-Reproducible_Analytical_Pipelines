@@ -1,27 +1,16 @@
 #----------------------------------------------------------#
 #
+#              Reproducible Analytical Pipelines
 #
-#                     Project name
+#                    Render exercises
 #
-#                  Render Exercises
-#
-#
-#
-#                       O. Mottl
-#                         2025
+#                     O. Mottl
+#                        2026
 #
 #----------------------------------------------------------#
 
-# Setup -----
+source(here::here("R/00_Config_file.R"))
 
-library(here)
-
-source(
-  here::here("R/00_Config_file.R")
-)
-
-# Render -----
 quarto::quarto_render(
-  input = here::here("R/Exercises/01_example.qmd")
+  input = here::here("R/Exercises/01_targets_workshop.qmd")
 )
- 

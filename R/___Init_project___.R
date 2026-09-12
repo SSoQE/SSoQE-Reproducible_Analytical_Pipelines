@@ -1,123 +1,61 @@
 #----------------------------------------------------------#
 #
-#
-#                     Project name
+#              Reproducible Analytical Pipelines
 #
 #                     Project setup
 #
+#                     O. Mottl
+#                        2026
 #
-#                O. Mottl, Author name
-#                         2025
-#
 #----------------------------------------------------------#
 
-# Script to prepare all components of the environment to run the Project.
-#   Needs to be run only once
+# Run this script once when preparing a new local copy of the project.
 
-#----------------------------------------------------------#
-# Step 0: Install {renv} for package management -----
-#----------------------------------------------------------#
-
-if (
-  "renv" %in% utils::installed.packages()
-) {
-  library(renv)
-} else {
-  # install package
+if (!requireNamespace("renv", quietly = TRUE)) {
   utils::install.packages("renv")
-
-  # load the package
-  library(renv)
 }
-
-#----------------------------------------------------------#
-# Step 1: Activate 'renv' project -----
-#----------------------------------------------------------#
-
-# NOTE: The R may ask the User to restart the session (R).
-#   After that, continue with the next step
 
 renv::activate()
 
-#----------------------------------------------------------#
-# Step 1: Install {here} for file navigation -----
-#----------------------------------------------------------#
-
-if (
-  "here" %in% utils::installed.packages()
-) {
-  library(here)
-} else {
-  # install package
-  renv::install("here")
-
-  # load the package
-  library(here)
-}
-
-#----------------------------------------------------------#
-# Step 2: Synchronize package versions with the project -----
-#----------------------------------------------------------#
-
-# If there is no lock file present make a new snapshot
-if (
-  isTRUE("renv.lock" %in% list.files(here::here()))
-) {
-  cat("The project already has a lockfile. Restoring packages", "\n")
-
+if (file.exists("renv.lock")) {
   renv::restore(
-    lockfile = here::here("renv.lock")
+    lockfile = "renv.lock",
+    prompt = FALSE
   )
-
-  cat("Set up completed. You can continute to run the project", "\n")
-
-  cat("Do NOT run the rest of this script", "\n")
-} else {
-  cat("The project seems to be new (no lockfile)", "\n")
-
-  cat("Continue with this script", "\n")
 }
 
-#----------------------------------------------------------#
-# Step 3: Install packages to the project -----
-#----------------------------------------------------------#
-
-# install all packages in the lst from CRAN
-sapply(
-  c(
-    "fs",
-    "here",
-    "janitor",
-    "jsonlite",
-    "knitr",
-    "languageserver",
-    "quarto",
-    "renv",
-    "remotes",
-    "rlang",
-    "tidyverse",
-    "usethis",
-    "utils"
-  ),
-  renv::install,
-  character.only = TRUE
+project_packages <- c(
+  "countdown",
+  "fs",
+  "here",
+  "janitor",
+  "jsonlite",
+  "knitr",
+  "languageserver",
+  "palmerpenguins",
+  "qrcode",
+  "quarto",
+  "renv",
+  "rlang",
+  "targets",
+  "tidyverse",
+  "usethis",
+  "visNetwork"
 )
 
-# install RUtilpol from GitHub
-remotes::install_github(
-  repo = "HOPE-UIB-BIO/R-Utilpol-package",
-  ref = "HEAD",
-  quiet = FALSE,
-  upgrade = "ask"
-)
+renv::install(project_packages)
 
-#----------------------------------------------------------#
-# Step 4: Save versions of packages -----
-#----------------------------------------------------------#
+stopifnot(
+  requireNamespace("palmerpenguins", quietly = TRUE),
+  requireNamespace("targets", quietly = TRUE),
+  requireNamespace("visNetwork", quietly = TRUE)
+)
 
 renv::snapshot(
-  lockfile = here::here("renv.lock")
+  lockfile = "renv.lock",
+  packages = project_packages,
+  update = TRUE,
+  prompt = FALSE
 )
 
-cat("Set up completed. You can continute to run the project", "\n")
-
+message("Project setup completed.")

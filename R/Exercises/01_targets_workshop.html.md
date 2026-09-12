@@ -1,0 +1,323 @@
+---
+title: "Building a pipeline with `{targets}`"
+subtitle: "Three guided exercises with Palmer penguins"
+author: "Ondřej Mottl"
+---
+
+
+
+## Before you start
+
+Exercise 1 begins by creating a new RStudio Project outside the lecture repository. You will then run one bootstrap script that creates and verifies the prepared data, functions, checkpoints, and solutions in that new project.
+
+The three exercises build on each other. If you get stuck, use the checkpoint at the end of the current exercise and continue with the group.
+
+## The analysis
+
+We will model the relationship between bill depth and bill length for Adelie penguins. The prepared functions perform one task each:
+
+| Function | Result |
+|---|---|
+| `read_penguins()` | Unmodified CSV data |
+| `clean_penguins()` | Complete analysis columns |
+| `filter_penguins()` | Data for one species |
+| `fit_penguin_model()` | Linear model |
+| `plot_penguin_model()` | Plot with the fitted line |
+| `summarise_penguins()` | One-row numerical summary |
+
+# Exercise 1: create a standalone `targets` project
+
+**Time:** 7 minutes
+
+## Stage 1: create the project and add the prepared files
+
+### Step 1: create a new RStudio Project
+
+In RStudio, choose **File > New Project > New Directory > New Project**. Name it `targets-penguins` and create it in a personal working location outside the lecture repository.
+
+### Step 2: add the prepared files
+
+You can inspect the raw [`setup_exercise.R`](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R) before running it. The script contains all prepared files, so this step makes one small web request.
+
+Run:
+
+```r
+
+source(paste0(
+  "https://raw.githubusercontent.com/SSoQE/",
+  "SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R"
+))
+```
+
+The script uses only base R, refuses to overwrite existing files, and verifies every file after writing it.
+
+Refresh the Files pane. The project root should now contain `Checkpoints`, `Data`, `R`, `Solutions`, and `START_HERE.md`.
+
+Confirm that `R/Functions/` contains seven editable function files and that `Data/Input/penguins.csv` exists. Exercise 2 will use these local files, so it needs no further download.
+
+## Stage 2: create and inspect the generated pipeline
+
+### Step 3: create the default target script
+
+Run only this command:
+
+```r
+
+targets::use_targets()
+```
+
+Confirm that `_targets.R` appeared in `targets-penguins`.
+
+Open `_targets.R` and find `library(targets)`, `tar_option_set()`, `tar_source()`, and the final `list()` containing target definitions.
+
+Now run the second command:
+
+```r
+
+targets::tar_manifest()
+```
+
+### Success check
+
+RStudio shows `targets-penguins` as the current project, `_targets.R` exists there, and `tar_manifest()` returns a two-row table. The lecture repository remains unchanged.
+
+### Checkpoint 1
+
+If `use_targets()` failed, copy the local checkpoint inside your exercise project:
+
+```r
+
+file.copy(
+  from = "Checkpoints/01_default_targets.R",
+  to = "_targets.R",
+  overwrite = TRUE
+)
+```
+
+You can also open the [raw Checkpoint 1 file](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/Exercise_project_starter/Checkpoints/01_default_targets.R).
+
+# Exercise 2: build and run the penguin pipeline
+
+**Time:** 14 minutes
+
+Replace the generated example in `_targets.R` with the steps below.
+
+### Step 1: load the local functions and declare packages
+
+The Exercise 1 bootstrap created the editable files in `R/Functions/`. Keep `library(targets)`, then add:
+
+```r
+
+targets::tar_source("R/Functions")
+
+targets::tar_option_set(
+  packages = c(
+    "dplyr",
+    "ggplot2",
+    "readr",
+    "tidyr"
+  )
+)
+```
+
+`tar_source()` makes the prepared functions available to the pipeline. `tar_option_set()` tells worker processes which packages the target commands need.
+
+### Step 2: track the input file
+
+Begin the final `list()` with:
+
+```r
+
+targets::tar_target(
+  penguins_file,
+  "Data/Input/penguins.csv",
+  format = "file"
+)
+```
+
+`format = "file"` tells `targets` to monitor the contents of the CSV, rather than only storing its path as text.
+
+### Step 3: add the data targets
+
+```r
+
+targets::tar_target(
+  penguins_raw,
+  read_penguins(penguins_file)
+),
+targets::tar_target(
+  penguins_clean,
+  clean_penguins(penguins_raw)
+),
+```
+
+The object name inside each command creates the dependency.
+
+### Step 4: add the analysis targets
+
+```r
+
+targets::tar_target(
+  selected_species,
+  "Adelie"
+),
+targets::tar_target(
+  penguins_species,
+  filter_penguins(penguins_clean, selected_species)
+),
+targets::tar_target(
+  penguin_model,
+  fit_penguin_model(penguins_species)
+),
+targets::tar_target(
+  penguin_figure,
+  plot_penguin_model(penguins_species, penguin_model)
+),
+```
+
+Check that all seven `tar_target()` calls sit inside one final `list()`.
+
+### Step 5: inspect before running
+
+```r
+
+targets::tar_manifest()
+targets::tar_visnetwork()
+```
+
+Before you continue, trace the route from `penguins_file` to `penguin_figure` in the graph.
+
+### Step 6: run twice
+
+```r
+
+targets::tar_make()
+targets::tar_make()
+```
+
+The first call should build seven targets. The second should skip all seven.
+
+### Step 7: retrieve the figure
+
+```r
+
+targets::tar_read(penguin_figure)
+```
+
+### Success check
+
+The graph contains seven targets, the second run skips the pipeline, and `tar_read()` displays an Adelie penguin plot.
+
+### Checkpoint 2
+
+```r
+
+file.copy(
+  from = "Checkpoints/02_penguin_pipeline.R",
+  to = "_targets.R",
+  overwrite = TRUE
+)
+```
+
+# Exercise 3: change and expand the pipeline
+
+**Time:** 13 minutes
+
+### Step 1: change the plotting function
+
+Open `R/Functions/plot_penguin_model.R`. In `geom_point()`, change `shape = 19` to `shape = 17`.
+
+Do not run the function file with `source()`. Predict the result, then run:
+
+```r
+
+targets::tar_outdated()
+targets::tar_make()
+```
+
+The figure should rebuild. The data and model targets should remain skipped.
+
+### Step 2: add a new target
+
+Add this target inside the final `list()` in `_targets.R`:
+
+```r
+
+targets::tar_target(
+  penguin_summary,
+  summarise_penguins(penguins_species)
+),
+```
+
+Inspect the changed graph, build the new target, and read its result:
+
+```r
+
+targets::tar_visnetwork()
+targets::tar_make()
+targets::tar_read(penguin_summary)
+```
+
+### Success check
+
+The plot-only edit rebuilds only `penguin_figure`. The new `penguin_summary` target depends on `penguins_species`, and the final pipeline is fully up to date.
+
+Explain to your neighbour why one target was rebuilt, one was built for the first time, and one upstream target was skipped.
+
+### Checkpoint 3
+
+```r
+
+file.copy(
+  from = "Checkpoints/03_extended_pipeline.R",
+  to = "_targets.R",
+  overwrite = TRUE
+)
+```
+
+## Optional challenge: one branch per species
+
+The completed example is in `Solutions/branching_preview.R`. Here, `map()` describes a branching pattern to `targets`; it does not call `purrr::map()`.
+
+```r
+
+targets::tar_target(
+  penguin_model,
+  fit_penguin_model(penguins_by_species),
+  pattern = map(penguins_by_species),
+  iteration = "list"
+)
+```
+
+# Where to continue
+
+## Start again tomorrow
+
+- [Get started with targets in four minutes](https://docs.ropensci.org/targets/#get-started-in-4-minutes): a video, code repository, and browser-based example.
+- [Official walkthrough](https://books.ropensci.org/targets/walkthrough.html): rebuild a small pipeline step by step.
+- `Solutions/_targets.R`: repeat this lesson from the completed local example.
+
+## Understand the ideas
+
+- [The targets user manual](https://books.ropensci.org/targets/): the authoritative learning resource.
+- [Functions](https://books.ropensci.org/targets/functions.html), [targets and dependencies](https://books.ropensci.org/targets/targets.html), [projects](https://books.ropensci.org/targets/projects.html), and [data and files](https://books.ropensci.org/targets/data.html): focused chapters for the concepts used today.
+- [Building reproducible analytical pipelines with R](https://raps-with-r.dev/targets.html): how functions, testing, dependencies, and build automation fit together.
+
+## Practise with another course
+
+- [Carpentries Incubator workshop](https://carpentries-incubator.github.io/targets-workshop/): a detailed guided course. The material currently has pre-alpha status.
+- [Reproducible computation at scale in R](https://wlandau.github.io/targets-tutorial/): a visual explanation of changes propagating through larger workflows.
+
+## When something breaks
+
+- [Debugging pipelines](https://books.ropensci.org/targets/debugging.html): inspect errors and reproduce them interactively.
+- [How to get help](https://books.ropensci.org/targets/help.html): isolate the problem and prepare a useful reproducible example.
+- [Function reference](https://docs.ropensci.org/targets/reference/index.html): check arguments and return values.
+- [GitHub Discussions](https://github.com/ropensci/targets/discussions): search previous questions before posting a reproducible example.
+
+## When ready to scale
+
+- [Dynamic branching](https://books.ropensci.org/targets/dynamic.html): repeat similar work over many inputs.
+- [Performance](https://books.ropensci.org/targets/performance.html) and [`crew`](https://books.ropensci.org/targets/crew.html): monitor and distribute larger computations.
+- [Literate programming](https://books.ropensci.org/targets/literate-programming.html): let a pipeline render Quarto reports.
+- [R Targetopia](https://wlandau.github.io/targetopia/): extension packages for specialised workflows.
