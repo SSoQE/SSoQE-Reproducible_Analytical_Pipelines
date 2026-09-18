@@ -7,7 +7,6 @@ format:
     toc: true
     toc-depth: 5
     keep-md: true
-    code-link: true
     embed-resources: true
     code-line-numbers: true
     theme: [default, _exercise_theme.scss]

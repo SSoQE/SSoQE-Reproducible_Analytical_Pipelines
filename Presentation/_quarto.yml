@@ -1,8 +1,8 @@
 project:
-  title: "SSOQE - Reproducibility in Science"
+  title: "SSoQE - Reproducible Analytical Pipelines"
   pre-render: "../R/00_Config_file.R"
 
-format: 
+format:
   revealjs:
     slide-number: true
     theme: [default, custom_theme.scss]
