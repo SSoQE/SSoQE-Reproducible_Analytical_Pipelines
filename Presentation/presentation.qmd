@@ -87,7 +87,7 @@ include_local_figure("Logos/SSOQE_logo3.png")
 ::::
 
 ::: {.notes}
-Timing: 0:00 to 1:00. Welcome participants and frame the lesson around a practical problem: keeping results aligned with changing code and data. The complete slides, exercise guide, data, functions, and checkpoints live in the linked repository.
+Timing: 0:00 to 1:00. Welcome participants and frame the lesson around a practical problem: keeping results aligned with changing code and data. The slides, exercise bootstrap, data, functions, and checkpoints live in the linked repository.
 :::
 <!-- 2 -->
 ## Reproducible analytical pipeline
@@ -330,11 +330,19 @@ The package records:
 :::
 
 ::: {.notes}
-Timing: 11:00 to 12:00. Keep the package introduction brief. The next four slides show the same analysis as targets, execute it, inspect the graph, and retrieve the result.
+Timing: 11:00 to 12:00. Keep the package introduction brief. The next four slides show the same analysis as targets, inspect the planned graph, execute it, and retrieve the result.
+:::
+
+# Making the pipeline
+
+::: {.notes}
+Timing: 12:00 transition into the three-target translation; no additional time beyond the following demonstration.
 :::
 
 <!-- 7 -->
 ## The same analysis as three targets {.smaller}
+
+<br>
 
 :::: {.columns}
 
@@ -388,6 +396,8 @@ targets::tar_target(
 
 ::::
 
+<br>
+
 ::: {.fragment .blockquote}
 Each target returns one value. Using another target's name in the command creates a dependency.
 :::
@@ -397,14 +407,86 @@ Timing: 12:00 to 16:00. Keep each target in the same position as its script on t
 :::
 
 <!-- 8 -->
+## Inspect the planned pipeline {.smaller}
+
+```{r}
+#| label: prepare-targets-network
+#| include: false
+demo_store <- tempfile(pattern = "targets-lecture-")
+demo_script <- here::here("R/Presentation/targets_demo.R")
+
+```
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="30%"}
+
+```r
+targets::tar_visnetwork(
+  targets_only = TRUE
+)
+```
+
+Blue means not yet built. The arrows come from target names used inside commands. What will build first?
+
+:::
+
+::: {.column width="70%"}
+
+```{r}
+#| label: show-demo-network
+#| echo: false
+#| warning: false
+#| message: false
+#| out-height: "440px"
+demo_network <- suppressWarnings(
+  targets::tar_visnetwork(
+    targets_only = TRUE,
+    script = demo_script,
+    store = demo_store,
+    reporter = "silent",
+    callr_function = NULL
+  )
+) |>
+ visNetwork::visNodes(
+    size = 30,
+    font = list(size = 20)
+  ) |>
+  visNetwork::visEdges(
+    width = 2,
+    arrows = "to",
+    smooth = list(
+      enabled = TRUE,
+      type = "curvedCW",
+      roundness = 0.18
+    )
+  ) |>
+  visNetwork::visHierarchicalLayout(
+    levelSeparation = 230,
+    direction = "LR"
+  )
+
+demo_network$x$legend <- NULL
+demo_network
+```
+
+:::
+
+::::
+
+::: {.notes}
+Timing: 16:00 to 18:00. This is the live tar_visnetwork output from the declared but unbuilt pipeline. Trace penguins_species into the model and figure, then trace the model into the figure. Ask participants to predict the build order before revealing the tar_make() output.
+:::
+
+
+<!-- 9 -->
 ## Run the pipeline {.smaller}
 
 ```{r}
 #| label: prepare-targets-demo
 #| include: false
-demo_store <- tempfile(pattern = "targets-lecture-")
-demo_script <- here::here("R/Presentation/targets_demo.R")
-
 run_demo_pipeline <- function() {
   start_marker <- "__TARGETS_OUTPUT_START__"
   end_marker <- "__TARGETS_OUTPUT_END__"
@@ -451,6 +533,9 @@ demo_first_output <- run_demo_pipeline()
 demo_second_output <- run_demo_pipeline()
 ```
 
+<br>
+<br>
+
 :::: {.columns}
 
 ::: {.column width="55%"}
@@ -491,79 +576,20 @@ cat(demo_second_output, sep = "\n")
 
 ::::
 
+<br>
+
 ::: {.fragment .blockquote}
 Nothing changed, so every target was skipped.
 :::
 
 ::: {.notes}
-Timing: 16:00 to 18:00. The pipeline executes during rendering. The output blocks contain the literal reporter stream from the two tar_make() calls executed during rendering, not reconstructed status tables. The verbose reporter makes every dispatched and completed target visible. All three targets complete on the first run. The second run skips the pipeline because the commands and dependencies are unchanged.
-:::
-<!-- 9 -->
-## Inspect the pipeline {.smaller}
-
-:::: {.columns}
-
-::: {.column width="22%"}
-
-```r
-targets::tar_visnetwork(
-  targets_only = TRUE
-)
-```
-
-The arrows come from target names used inside commands.
-
-:::
-
-::: {.column width="75%"}
-
-```{r}
-#| label: show-demo-network
-#| echo: false
-#| warning: false
-#| message: false
-#| out-height: "440px"
-demo_network <- suppressWarnings(
-  targets::tar_visnetwork(
-    targets_only = TRUE,
-    script = demo_script,
-    store = demo_store,
-    reporter = "silent",
-    callr_function = NULL
-  )
-) |>
- visNetwork::visNodes(
-    size = 30,
-    font = list(size = 20)
-  ) |>
-  visNetwork::visEdges(
-    width = 2,
-    arrows = "to",
-    smooth = list(
-      enabled = TRUE,
-      type = "curvedCW",
-      roundness = 0.18
-    )
-  ) |>
-  visNetwork::visHierarchicalLayout(
-    levelSeparation = 230,
-    direction = "LR"
-  )
-
-demo_network$x$legend <- NULL
-demo_network
-```
-
-:::
-
-::::
-
-::: {.notes}
-Timing: 18:00 to 20:00. This is the live tar_visnetwork output from the pipeline that just ran. Trace penguins_species into the model and figure, then trace the model into the figure. All three nodes are current after tar_make().
+Timing: 18:00 to 20:00. The pipeline executes during rendering. The output blocks contain the literal reporter stream from the two tar_make() calls executed during rendering, not reconstructed status tables. The verbose reporter makes every dispatched and completed target visible. All three targets complete on the first run. The second run skips the pipeline because the commands and dependencies are unchanged.
 :::
 
 <!-- 10 -->
 ## Read a result {.smaller}
+
+<br>
 
 :::: {.columns}
 
@@ -603,56 +629,23 @@ The pipeline ran, the graph records why, and the result is ready to use.
 :::
 
 ::: {.notes}
-Timing: 20:00 to 22:00. This plot is the actual penguin_figure target created on slide 8. Keep the distinction clear: tar_make() updates the pipeline, tar_visnetwork() displays its state, and tar_read() retrieves an object for interactive use.
-:::
-<!-- 11 -->
-## A separate project for the exercises {.smaller}
-
-:::: {.columns}
-
-::: {.column width="57%"}
-
-1. In RStudio: **File > New Project > New Directory > New Project**.
-2. Name it `targets-penguins` and create it outside the lecture repository.
-3. Inspect the raw [`setup_exercise.R`](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R), then run:
-
-```r
-source(paste0(
-  "https://raw.githubusercontent.com/",
-  "SSoQE/SSoQE-Reproducible_Analytical_",
-  "Pipelines/main/setup_exercise.R"
-))
-```
-
+Timing: 20:00 to 22:00. This plot is the actual penguin_figure target built on slide 9. Keep the distinction clear: tar_make() updates the pipeline, tar_visnetwork() displays its state, and tar_read() retrieves an object for interactive use.
 :::
 
-::: {.column width="39%" .fragment}
-
-One 32 KB request creates and verifies:
-
-- `Data/Input/penguins.csv`
-- seven files in `R/Functions/`
-- `Checkpoints/` and `Solutions/`
-
-```r
-targets::use_targets()
-```
-
-This separate command creates `_targets.R`.
-
-:::
-
-::::
+# Exercise 1: the default pipeline
 
 ::: {.notes}
-Timing: 22:00 to 23:00. Demonstrate the complete sequence in a disposable directory. Start with a blank RStudio Project and open the raw bootstrap link so participants can inspect the code. The single small request writes the local data, seven editable functions, checkpoints, and solutions. Point to those files before running use_targets(), which separately creates the pipeline infrastructure.
+Timing: 22:00 to 23:00. Introduce the first hands-on section before opening the generated script.
 :::
+
 <!-- 12 -->
 ## Inside generated `_targets.R` {.smaller}
 
+<br>
+
 :::: {.columns}
 
-::: {.column width="49%"}
+::: {.column width="45%"}
 ```r
 library(targets)
 
@@ -678,11 +671,14 @@ list(
 ```
 :::
 
-::: {.column width="26%" .fragment}
+::: {.column width="55%" .fragment}
+
+<br>
+<br>
 
 1. Load the pipeline infrastructure.
 2. Set options shared by targets.
-3. Source the prepared functions.
+3. Source functions from `R/` when present.
 4. Return the target list.
 
 :::
@@ -690,136 +686,141 @@ list(
 ::::
 
 ::: {.notes}
-Timing: 23:00 to 24:00. This slide matches targets 1.12.0. Identify the four regions. The bootstrapped project contains only reusable function files under R/, so the generated tar_source() call is safe. Exercise 2 will narrow it to R/Functions to make the intended source explicit.
+Timing: 23:00 to 24:00. This slide matches targets 1.12.0. Identify the four regions. The generated example works without an R/ directory; tar_source() prints a harmless missing-directory warning because there are no prepared functions to load yet. Exercise 2 later adds local penguin functions and narrows sourcing to R/Functions.
 :::
 
 <!-- 13 -->
-## [Exercise 1, stage 1: get the prepared files]{.text-size-heading2} {.exercise .text-center .smaller}
+## [Exercise 1, stage 1: a new targets project]{.text-size-heading2} {.exercise .text-center .smaller}
 
 ::: {.blockquote .text-left}
 
 **Work individually or with a neighbour.**
 
-1. Create a new project named `targets-penguins`.
-2. Inspect the raw [`setup_exercise.R`](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R).
-3. Run the one-request bootstrap:
+1. Create a blank RStudio Project named `targets-penguins` outside the lecture repository.
+2. Create the default pipeline:
 
 ```r
-source(paste0(
-  "https://raw.githubusercontent.com/SSoQE/",
-  "SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R"
-))
+targets::use_targets()
 ```
 
-4. Check the local files:
+3. Open `_targets.R`. Find `library(targets)`, `tar_source()`, and the final `list()`.
+4. Inspect the two example targets:
 
 ```r
-list.files("R/Functions")
-file.exists("Data/Input/penguins.csv")
+targets::tar_manifest()
 ```
 
-**Success:** seven function files appear and the file check returns `TRUE`.
+**Success:** the manifest lists `data` and `model`.
 
 :::
 
 `r countdown::countdown(minutes = 4)`
 
 ::: {.notes}
-Timing: 24:00 to 28:00. Participants work individually or with a neighbour. Before they run the bootstrap, confirm that RStudio shows targets-penguins as the active project. The script uses one small request, refuses to overwrite files, and verifies every local copy. Do not run use_targets() yet.
+Timing: 24:00 to 28:00. Check that RStudio shows the new targets-penguins project. This activity needs no download or prepared files. The generated script calls tar_source(), which may warn that R/ does not exist. That is harmless for this default example; Exercise 2 supplies the functions. Let them identify the default target script before running it. tar_manifest() shows the generated example without building it.
 :::
+
 <!-- 14 -->
-## [Exercise 1, stage 2: create and inspect]{.text-size-heading2} {.exercise .text-center .smaller}
+## [Exercise 1, stage 2: build and inspect]{.text-size-heading2} {.exercise .text-center .smaller}
 
 ::: {.blockquote .text-left}
 
-1. Create the default target script:
+1. Build the generated pipeline:
 
 ```r
-targets::use_targets()
+targets::tar_make()
 ```
 
-2. Open `_targets.R` and find its four regions.
-3. Inspect the pipeline:
+2. Run the same command again. What changes in the console output?
+3. Inspect the completed pipeline:
 
 ```r
-targets::tar_manifest()
+targets::tar_visnetwork()
 ```
 
-**Success:** `_targets.R` exists and the manifest contains `data` and `model`.
-
-**If you are stuck:** copy the local `Checkpoints/01_default_targets.R` to `_targets.R`.
+**Success:** both runs finish without errors, and a two-node network appears. [Checkpoint 1](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/Exercise_project_starter/Checkpoints/01_default_targets.R)
 
 :::
 
 `r countdown::countdown(minutes = 3)`
 
 ::: {.notes}
-Timing: 28:00 to 31:00. Keep use_targets() and tar_manifest() as two distinct actions. Help participants find the generated file before they run the inspection command. The checkpoint is already local because the bootstrap created it in stage 1, so recovery requires no additional internet request.
+Timing: 28:00 to 31:00. Ask participants to predict the second run before pressing Enter. They should see two completed targets on the first run and two skipped on the second. Have them point to the data-to-model dependency in tar_visnetwork(). Anyone blocked by the generated script can copy the raw Checkpoint 1 file linked on this slide, then rejoin the build.
 :::
 <!-- 15 -->
 ## Exercise 1 debrief {.smaller}
 
-:::: {.columns}
-
-::: {.column width="52%"}
-
-```text
-#> # A tibble: 2 × 2
-#>   name  command
-#>   <chr> <chr>
-#> 1 data  tibble(...)
-#> 2 model coefficients(lm(..., data = data))
+```{r}
+#| label: prepare-default-network
+#| include: false
+default_project <- tempfile(pattern = "targets-default-example-")
+dir.create(default_project)
+# No R/ directory is needed for the generated example.
+file.copy(
+  from = here::here("R/Exercises/Checkpoints/01_default_targets.R"),
+  to = file.path(default_project, "_targets.R")
+)
+withr::with_dir(
+  default_project,
+  suppressWarnings(
+    targets::tar_make(reporter = "silent", callr_function = NULL)
+  )
+)
 ```
 
-:::
+:::: {.columns}
 
 ::: {.column width="38%"}
 
-```{mermaid}
-flowchart LR
-  D[data] --> M[model]
-```
+### First run
 
-Mentioning `data` creates the edge.
+`tar_make()` builds `data`, then `model`.
+
+### Second run
+
+`tar_make()` skips both targets.
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: show-default-network
+#| echo: false
+#| warning: false
+#| message: false
+#| out-height: "380px"
+default_network <- withr::with_dir(
+  default_project,
+  targets::tar_visnetwork(
+    targets_only = TRUE,
+    reporter = "silent",
+    callr_function = NULL
+  )
+) |>
+  visNetwork::visNodes(size = 30, font = list(size = 20)) |>
+  visNetwork::visEdges(width = 2, arrows = "to")
+default_network$x$legend <- NULL
+default_network
+```
 
 :::
 
 ::::
 
 ::: {.notes}
-Timing: 31:00 to 32:00. Read the two-row manifest, then trace the rendered network. Confirm that target order in the list is not the dependency mechanism. The reference to data inside the model command creates the edge.
+Timing: 31:00 to 32:00. Compare the two console runs, then trace the real tar_visnetwork graph from the generated example. The model command names data, so targets records the dependency. The second run can skip both targets because their commands and inputs have not changed. Exercise 2 will replace this example with the penguin analysis.
 :::
-
-<!-- 16 -->
-## The bootstrap created these pieces {.smaller}
-
-```text
-targets-penguins/
-├─ Checkpoints/
-├─ Data/
-│  └─ Input/penguins.csv
-├─ R/
-│  └─ Functions/
-│     ├─ read_penguins.R
-│     ├─ clean_penguins.R
-│     ├─ filter_penguins.R
-│     ├─ fit_penguin_model.R
-│     ├─ plot_penguin_model.R
-│     ├─ summarise_penguins.R
-│     └─ split_penguins.R
-├─ Solutions/
-└─ _targets.R
-```
-
-::: {.fragment .blockquote}
-These are local, editable files. Exercise 2 needs no further download.
-:::
+# Building the penguin pipeline
 
 ::: {.notes}
-Timing: 32:00 to 34:00. Connect this slide explicitly to Exercise 1: setup_exercise.R wrote the data, functions, checkpoints, and solutions into the new project. use_targets() added only _targets.R. Open one function file if helpful. Exercise 2 now connects these prepared local pieces into a pipeline.
+Timing: 32:00 transition into Exercise 2; no additional time beyond the bootstrap activity.
 :::
+
 <!-- 17 -->
 ## Functions and packages
+
+<br>
 
 ```r
 
@@ -835,6 +836,9 @@ targets::tar_option_set(
 )
 ```
 
+<br>
+
+
 ::: {.fragment}
 
 `tar_source()`: load project functions.
@@ -848,11 +852,13 @@ targets::tar_option_set(
 :::
 
 ::: {.notes}
-Timing: 34:00 to 36:00. Explain why clicking Source in RStudio does not count: the pipeline must load everything it needs in a fresh process.
+Timing: 35:00 to 37:00. Explain why clicking Source in RStudio does not count: the pipeline must load everything it needs in a fresh process.
 :::
 
 <!-- 18 -->
 ## A tracked file
+
+<br>
 
 ```r
 
@@ -863,35 +869,28 @@ targets::tar_target(
 )
 ```
 
-:::: {.columns .fragment}
-::: {.column width="40%"}
+<br>
 
-Without `format = "file"`
-
-Tracks only the path.
-
-:::
-::: {.column width="3%"}
-:::
-::: {.column width="40%"}
+::: {.fragment}
 
 With `format = "file"`
 
 Tracks the file contents.
 
 :::
-::::
 
 ::: footer
 [Files in targets](https://books.ropensci.org/targets/data.html)
 :::
 
 ::: {.notes}
-Timing: 36:00 to 38:00. Ask what happens if a colleague replaces the CSV with a new version. The file target makes that change visible to the pipeline.
+Timing: 37:00 to 39:00. Ask what happens if a colleague replaces the CSV with a new version. The file target makes that change visible to the pipeline.
 :::
 
 <!-- 19 -->
-## Data targets
+## First targets
+
+<br>
 
 ```r
 
@@ -905,17 +904,21 @@ targets::tar_target(
 ),
 ```
 
+<br>
+
 ```{mermaid}
 flowchart LR
   F[penguins_file] --> R[penguins_raw] --> C[penguins_clean]
 ```
 
 ::: {.notes}
-Timing: 38:00 to 40:00. Reveal one target at a time. Ask which symbol in each command connects it to the previous target.
+Timing: 39:00 to 41:00. Reveal one target at a time. Ask which symbol in each command connects it to the previous target.
 :::
 
 <!-- 20 -->
 ## Analysis targets
+
+<br>
 
 ```r
 
@@ -935,7 +938,7 @@ targets::tar_target(
 ```
 
 ::: {.notes}
-Timing: 40:00 to 42:00. Point out that `selected_species` is data too. Making it a target means targets can detect a change from Adelie to Gentoo.
+Timing: 41:00 to 43:00. Point out that `selected_species` is data too. Making it a target means targets can detect a change from Adelie to Gentoo.
 :::
 
 <!-- 21 -->
@@ -944,6 +947,9 @@ Timing: 40:00 to 42:00. Point out that `selected_species` is data too. Making it
 :::: {.columns}
 
 ::: {.column width="35%"}
+
+<br>
+<br>
 
 ```r
 
@@ -979,7 +985,40 @@ flowchart TB
 ::::
 
 ::: {.notes}
-Timing: 42:00 to 43:00. Keep the network visible from the first state. Establish the habit of inspecting structure before spending time on a build. Compare every arrow with the object names used inside target commands.
+Timing: 43:00 to 44:00. Keep the network visible from the first state. Establish the habit of inspecting structure before spending time on a build. Compare every arrow with the object names used inside target commands.
+:::
+
+
+<!-- 16 -->
+## [Exercise 2, stage 1: get the prepared files]{.text-size-heading2} {.exercise .text-center .smaller}
+
+::: {.blockquote .text-left}
+
+**Stay in your `targets-penguins` project.** Inspect the raw [`setup_exercise.R`](https://raw.githubusercontent.com/SSoQE/SSoQE-Reproducible_Analytical_Pipelines/main/setup_exercise.R), then run:
+
+```r
+source(paste0(
+  "https://raw.githubusercontent.com/",
+  "SSoQE/SSoQE-Reproducible_Analytical_",
+  "Pipelines/main/setup_exercise.R"
+))
+```
+
+Check that the bootstrap created local, editable files:
+
+```r
+list.files("R/Functions")
+file.exists("Data/Input/penguins.csv")
+```
+
+**Success:** seven function files appear and the CSV check returns `TRUE`.
+
+:::
+
+`r countdown::countdown(minutes = 3)`
+
+::: {.notes}
+Timing: 32:00 to 35:00. This is the first point at which participants need the prepared penguin files. The bootstrap makes one small request and writes local copies of the data, seven functions, checkpoints, and solutions. It leaves the generated _targets.R and its _targets/ store in place, so participants continue in the same project. This sequence was checked in a fresh project.
 :::
 
 <!-- 22 -->
@@ -989,9 +1028,9 @@ Timing: 42:00 to 43:00. Keep the network visible from the first state. Establish
 
 **With a partner.**
 
-1. Replace the generated example.
+1. After the bootstrap, replace the generated example.
 2. Source `R/Functions` and declare packages.
-3. Add the seven targets shown below.
+3. Add the seven targets from the preceding code slides.
 4. Inspect with `tar_manifest()` and `tar_visnetwork()`.
 5. Run twice, then read `penguin_figure`.
 
@@ -1006,7 +1045,7 @@ Expected `tar_visnetwork()` result after a successful build · dark green = up t
 :::
 
 ::: {.notes}
-Timing: 43:00 to 45:00. Use the real tar_visnetwork output as the specification for the exercise. Ask participants to point from each node to the matching tar_target() block in the handout. Explain that the dark green nodes show the successful post-build state. The handout contains every code block, so participants should paste short blocks and explain dependencies rather than transcribe long code.
+Timing: 44:00 to 46:00. Use the real tar_visnetwork output as the specification for the exercise. Ask participants to point from each node to the matching tar_target() block on the preceding slides. Explain that the dark green nodes show the successful post-build state. Participants can use the linked Checkpoint 2 script if they need the complete pipeline.
 :::
 <!-- 23 -->
 ## [Exercise 2: support]{.text-size-heading2} {.exercise .text-center .smaller}
@@ -1026,10 +1065,10 @@ Timing: 43:00 to 45:00. Use the real tar_visnetwork output as the specification 
 
 :::
 
-`r countdown::countdown(minutes = 11)`
+`r countdown::countdown(minutes = 9)`
 
 ::: {.notes}
-Timing: 45:00 to 55:00. Pair participants. Check that commas sit between target definitions and all targets sit inside one list. Move anyone who is still blocked to Checkpoint 2 before the debrief.
+Timing: 46:00 to 55:00. Pair participants. Check that commas sit between target definitions and all targets sit inside one list. Move anyone who is still blocked to Checkpoint 2 before the debrief.
 :::
 <!-- 24 -->
 ## Exercise 2 debrief
@@ -1076,6 +1115,12 @@ include_local_figure("Figures/pipeline-current-graph.png")
 
 ::: {.notes}
 Timing: 55:00 to 56:00. Ask one participant to explain why the second run can skip safely. Point to the real tar_visnetwork output: every node is up to date. Mention that `_targets/` is a cache and metadata store, not a folder to edit by hand.
+:::
+
+# When a pipeline changes
+
+::: {.notes}
+Timing: 56:00 transition into invalidation; no additional time beyond the next prediction prompt.
 :::
 
 <!-- 25 -->
@@ -1239,6 +1284,12 @@ fit_penguin_model(penguins_species)
 Timing: 69:00 to 71:00. Present this as a survival routine, not a complete debugging course. The function call should fail in the ordinary interactive environment, where familiar tools are available.
 :::
 
+# Exercise 3: change and extend
+
+::: {.notes}
+Timing: 71:00 transition into the final exercise; no additional time beyond the next instruction slide.
+:::
+
 <!-- 32 -->
 ## [Exercise 3: change and extend]{.text-size-heading2} {.exercise .text-center .smaller}
 
@@ -1248,16 +1299,16 @@ Timing: 69:00 to 71:00. Present this as a survival routine, not a complete debug
 
 **With a partner.**
 
-1. Change the point shape.
+1. In `R/Functions/plot_penguin_model.R`, change `shape = 19`.
 2. Write down your prediction, then run `tar_outdated()`.
 3. Rebuild and confirm that upstream targets skip.
-4. Add `penguin_summary`.
+4. Add `tar_target(penguin_summary, summarise_penguins(penguins_species))`.
 5. Inspect, build, and read the new target.
 
 :::
 
 ::: {.notes}
-Timing: 71:00 to 73:00. Ask participants to write down their outdated prediction before running the command. The handout provides the exact new target definition.
+Timing: 71:00 to 73:00. Ask participants to write down their outdated prediction before running the command. The target definition is on this slide and in local Checkpoint 3.
 :::
 <!-- 33 -->
 ## [Exercise 3: support]{.text-size-heading2} {.exercise .text-center .smaller}
@@ -1277,7 +1328,7 @@ Timing: 71:00 to 73:00. Ask participants to write down their outdated prediction
 
 :::
 
-`r countdown::countdown(minutes = 10)`
+`r countdown::countdown(minutes = 9)`
 
 ::: {.notes}
 Timing: 73:00 to 82:00. Ask early finishers to change `clean_penguins()` and predict the wider outdated set before checking it. Move blocked participants to Checkpoint 3 before the timer ends. Keep the exact dependency answer for the debrief.
@@ -1310,6 +1361,8 @@ flowchart TB
 ::: {.notes}
 Timing: 82:00 to 84:00. Ask pairs to explain one status each. Reinforce that the graph, not the physical order of code, determines the schedule.
 :::
+
+# More complex pipelines
 
 <!-- 35 -->
 ## One analysis per species
@@ -1366,6 +1419,12 @@ Branches can run independently and in parallel with workers.
 
 ::: {.notes}
 Timing: 85:30 to 87:00. Keep this as a preview. Show the completed local example path, `Solutions/branching_preview.R`, and defer worker configuration to self-study.
+:::
+
+# [Outro]{.text-bold .r-fit-text} {.title}
+
+::: {.notes}
+Timing: 87:00. Close the timed lesson with the self-study map. The final contact slide is available for questions after 90:00.
 :::
 
 <!-- 37 -->
@@ -1427,5 +1486,52 @@ Timing: 87:00 to 88:30. Give participants a specific next action rather than ask
 | Extension packages? | [R Targetopia](https://wlandau.github.io/targetopia/) |
 
 ::: {.notes}
-Timing: 88:30 to 90:00. Ask participants to choose the row that matches their next question. Point them to the longer resource map in the exercise handout and remind them that the completed local solution works offline.
+Timing: 88:30 to 90:00. Ask participants to choose the row that matches their next question. Point them to the longer resource map in the README and remind them that the completed local solution works offline.
+:::
+
+## About me
+
+:::: {.columns}
+
+::: {.column width="25%"}
+
+```{r}
+#| label: outro-author-photo
+#| echo: false
+#| fig-alt: "Portrait illustration of Ondřej Mottl."
+include_local_figure("Author/Ondrej_Mottl-transparent-shadow.png")
+```
+
+```{r}
+#| label: outro-personal-web-qr
+#| echo: false
+#| fig-alt: "QR code linking to Ondřej Mottl's personal webpage."
+include_local_figure("QR/qr_personal_web.svg")
+```
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="70%"}
+
+[Ondřej Mottl]{.text-bold .text-size-heading2 .text-color-black}
+
+Assistant Professor of Plant Ecology at [Charles University](https://cuni.cz/UK-1.html)
+
+Head of the [Laboratory of Quantitative Ecology](https://ondrejmottl.github.io/lab/about_the_lab.html)
+
+- 📧 Ondrej.mottl(at)gmail.com
+- 🦋 [Bluesky](https://bsky.app/profile/ondrejmottl.bsky.social)
+- 🐱 [GitHub](https://github.com/OndrejMottl)
+- 🆔 [ORCID](https://orcid.org/0000-0002-9796-5081)
+- 🌐 [Personal webpage](https://ondrejmottl.github.io/)
+
+:::
+
+::::
+
+::: {.notes}
+No allocated teaching time. Leave this slide visible during questions. Bio and contact: https://ondrejmottl.github.io/ and https://ondrejmottl.github.io/lab/about_the_lab.html.
 :::

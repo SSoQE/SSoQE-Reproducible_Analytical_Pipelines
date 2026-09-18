@@ -1,14 +1,13 @@
 # Penguin `targets` exercise
 
-This directory contains the prepared files for a standalone exercise project.
+This guide arrives during Exercise 2, after you have created a separate `targets-penguins` RStudio Project and run the generated example pipeline in Exercise 1.
 
-1. In RStudio, create a new project named `targets-penguins` outside the lecture repository.
-2. Run the bootstrap command from the slides or handout. It creates `Checkpoints/`, `Data/`, `R/`, `Solutions/`, and this guide in one small web request.
-3. Confirm that the prepared directories appear in the project root.
-4. Follow the exercise handout, beginning with `targets::use_targets()`.
+1. Confirm that this file is inside your `targets-penguins` project, not the lecture repository.
+2. The bootstrap has added `Checkpoints/`, `Data/`, `R/Functions/`, and `Solutions/` without replacing your `_targets.R` or `_targets/` store.
+3. Follow Exercise 2 in the presentation to replace the generated target list with the penguin pipeline. If you need the complete script, open `Checkpoints/02_penguin_pipeline.R`.
 
-The project deliberately starts without `_targets.R`. The `Data/` and `R/Functions/` directories contain the prepared pieces. `Checkpoints/` lets you rejoin the exercise, and `Solutions/` contains the completed pipeline and optional branching example.
+`Data/` and `R/Functions/` hold local, editable prepared pieces. `Checkpoints/` lets you rejoin the exercise, and `Solutions/` contains the completed pipeline and optional branching example.
 
-The bootstrap refuses to overwrite existing files. If it reports a conflict, use a new blank RStudio Project or move the listed files before trying again.
+The bootstrap refuses to overwrite existing files. If it reports a conflict, check the listed files and ask the instructor before retrying; keep the `_targets.R` you created in Exercise 1.
 
 If you are reading this file inside `Exercise_project_starter/` in the lecture repository, do not run `use_targets()` there. Create the separate RStudio Project first.

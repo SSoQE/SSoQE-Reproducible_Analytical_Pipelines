@@ -201,7 +201,11 @@ footer <- c(
   "message(\"Prepared data: Data/Input/penguins.csv\")",
   "message(\"Prepared functions: R/Functions/ (7 editable files)\")",
   "message(\"Recovery files: Checkpoints/ and Solutions/\")",
-  "message(\"Next, run targets::use_targets()\")",
+  "if (file.exists(file.path(project_root, \"_targets.R\"))) {",
+  "  message(\"Next, replace the generated example in _targets.R for Exercise 2.\")",
+  "} else {",
+  "  message(\"Next, run targets::use_targets()\")",
+  "}",
   "",
   "invisible(destinations)"
 )
